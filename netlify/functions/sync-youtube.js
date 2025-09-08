@@ -39,35 +39,43 @@ export async function handler() {
       }
 
       // 3. Create CMS item
-      const createResp = await fetch(
-        `https://api.webflow.com/v2/collections/${COLLECTION_ID}/items`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${WEBFLOW_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            isDraft: false,
-            isArchived: false,
-            fields: {
-              name: title,
-              slug: slug,
-              youtubeUrl: link,
-              description: description,
-              thumbnail: thumbnail,
-            },
-          }),
-        }
-      );
+    const createResp = await fetch(
+  `https://api.webflow.com/v2/collections/${COLLECTION_ID}/items`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${WEBFLOW_TOKEN}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      isDraft: false,
+      isArchived: false,
+      fieldData: {
+        name: title,
+        slug: slug,
+        // ⚠️ Make sure these are your actual Webflow field *slugs*
+        youtubeUrl: link,
+        description: description,
+        thumbnail: thumbnail, // OK only if this is a Plain Text (URL) field
+      },
+    }),
+  }
+);
 
-      if (!createResp.ok) {
-        console.error("Error creating item:", await createResp.text());
-        continue;
-      }
+if (createResp.status === 409) {
+  console.log(`Duplicate slug, skipping: ${slug}`);
+  continue;
+}
+if (!createResp.ok) {
+  console.error("Error creating item:", await createResp.text());
+  continue;
+}
 
-      const created = await createResp.json();
-      console.log("Created:", created.id);
+const created = await createResp.json();
+const createdId = created.id || (created.item && created.item.id);
+console.log("Created:", createdId);
+
 
       // 4. Publish
       await fetch(
