@@ -5,7 +5,7 @@ import { XMLParser } from "fast-xml-parser";
 export async function handler() {
   const WEBFLOW_TOKEN = process.env.WEBFLOW_API_TOKEN;
   const COLLECTION_ID = process.env.COLLECTION_ID;
-  const SITE_ID = process.env.SITE_ID;
+  const WEBFLOW_SITE_ID = process.env.WEBFLOW_SITE_ID;
   const CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID;
 
   const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
