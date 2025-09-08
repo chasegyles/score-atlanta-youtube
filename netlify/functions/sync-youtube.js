@@ -43,7 +43,7 @@ export async function handler() {
       const link =
         entry?.link?.["@_href"] || `https://www.youtube.com/watch?v=${videoId}`;
       const publishedRaw = entry.published; // ISO from RSS
-      const description = entry?.["media:group"]?.["media:description"] ?? "";
+      const rawDescription = entry?.["media:group"]?.["media:description"] ?? "";
       const thumbUrl =
         entry?.["media:group"]?.["media:thumbnail"]?.["@_url"] ??
         `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
@@ -56,6 +56,18 @@ export async function handler() {
       const slug = `yt-${videoId}`;
       const publishedISO = new Date(publishedRaw).toISOString();
 
+      // --- sanitize description for single-line field ---
+      const descriptionOneLine = rawDescription
+        .replace(/\r?\n|\r/g, " ") // newlines → spaces
+        .replace(/\s+/g, " ") // collapse multiple spaces
+        .trim();
+
+      const MAX_LEN = 1000; // optional safety cutoff
+      const safeDescription =
+        descriptionOneLine.length > MAX_LEN
+          ? descriptionOneLine.slice(0, MAX_LEN)
+          : descriptionOneLine;
+
       // 2) Create CMS item (Webflow v2 uses fieldData)
       const payload = {
         isDraft: false,
@@ -65,18 +77,17 @@ export async function handler() {
           name: title,
           slug: slug,
 
-          // Your exact slugs (from your schema dump)
-          "video-url": link,               // Link
-          "description-2": description,    // PlainText
-          "published-date": publishedISO,  // DateTime
+          // Your exact slugs
+          "video-url": link,
+          "description-2": safeDescription,
+          "published-date": publishedISO,
 
-          // Image field — can accept a public URL directly (plus optional alt)
-          // Ref: Field Types & Item Values → ImageRef / Image (v2)
+          // Image field — can accept a URL directly
           "thumbnail-image": {
             url: thumbUrl,
-            alt: title
-          }
-        }
+            alt: title,
+          },
+        },
       };
 
       const createResp = await fetch(
@@ -86,14 +97,13 @@ export async function handler() {
           headers: {
             Authorization: `Bearer ${WEBFLOW_TOKEN}`,
             "Content-Type": "application/json",
-            Accept: "application/json"
+            Accept: "application/json",
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         }
       );
 
       if (createResp.status === 409) {
-        // Duplicate slug – already created earlier
         console.log(`Duplicate slug, skipping: ${slug}`);
         continue;
       }
@@ -120,12 +130,12 @@ export async function handler() {
           headers: {
             Authorization: `Bearer ${WEBFLOW_TOKEN}`,
             "Content-Type": "application/json",
-            Accept: "application/json"
+            Accept: "application/json",
           },
           body: JSON.stringify({
             itemIds: [createdId],
-            publishToWebflow: true
-          })
+            publishToWebflow: true,
+          }),
         }
       );
 
