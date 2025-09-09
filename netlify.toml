@@ -3,5 +3,5 @@
 
 [[scheduled]]
   name = "youtube-sync-job"
-  cron = "0 0 * * *" # every hour
+  cron = "0 * * * *" # every hour
   function = "sync-youtube"
