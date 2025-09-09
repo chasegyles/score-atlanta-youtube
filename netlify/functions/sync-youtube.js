@@ -1,5 +1,5 @@
 export const config = {
-  schedule: "0 * * * *" // every 5 minutes for testing
+  schedule: "0 * * * *" 
 };
 
 // netlify/functions/sync-youtube.js
