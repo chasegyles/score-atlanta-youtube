@@ -1,3 +1,7 @@
+export const config = {
+  schedule: "*/5 * * * *" // every 5 minutes for testing
+};
+
 // netlify/functions/sync-youtube.js
 // package.json must include: { "type": "module" }
 // deps: node-fetch, fast-xml-parser
